@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# SQLite databases (runtime artifacts, not committed)
+*.db
+*.sqlite
+*.sqlite3
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+*.xml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PCAP exports (runtime artifacts)
+*.pcap
+
+# Environment files (never commit secrets)
+.env
+.env.local

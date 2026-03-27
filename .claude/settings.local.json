@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wsl -d Ubuntu -- uname -a)",
+      "Bash(sudo apt-get:*)",
+      "Bash(wsl -d Ubuntu -- bash -c \"cd /mnt/c/Projects/sctp-probe && python3 -m venv .venv && echo ''venv created''\")",
+      "Bash(wsl -d Ubuntu -- bash -c \"cd /mnt/c/Projects/sctp-probe && source .venv/bin/activate && pip install --upgrade pip --quiet && pip install fastapi==0.115.6 ''uvicorn[standard]==0.32.1'' pydantic==2.10.3 pycrate==0.4.10 pytest==8.3.4 pytest-asyncio==0.24.0 ''httpx==0.27.2'' --quiet && echo ''base deps installed''\")",
+      "Bash(wsl -d Ubuntu -- bash -c \"cd /mnt/c/Projects/sctp-probe && source .venv/bin/activate && pip install fastapi==0.115.6 ''uvicorn[standard]==0.32.1'' pydantic==2.10.3 pycrate==0.7.11 pytest==8.3.4 pytest-asyncio==0.24.0 ''httpx==0.27.2'' --quiet && echo ''done''\")",
+      "Bash(wsl -d Ubuntu -- bash -c \"wget -q ''https://raw.githubusercontent.com/wireshark/wireshark/master/epan/dissectors/asn1/sbc-ap/SBC-AP-CommonDataTypes.asn'' -O /mnt/c/Projects/sctp-probe/specs/sbcap/SBC-AP-CommonDataTypes.asn && echo OK || echo FAILED\")",
+      "Bash(powershell -Command \"wsl -d Ubuntu -- bash /mnt/c/Projects/sctp-probe/phase11.sh\")",
+      "Bash(powershell -Command \"wsl -d Ubuntu -- ps aux 2>&1 | grep -E ''uvicorn|sentinel|python''\")"
+    ]
+  }
+}

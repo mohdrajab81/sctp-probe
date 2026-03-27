@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sctp-probe</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: monospace; font-size: 13px; background: #1a1a1a; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
+header { background: #111; padding: 8px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #333; flex-shrink: 0; }
+header h1 { font-size: 15px; color: #7ec8e3; }
+#ws-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #2a2a2a; }
+#ws-badge.live { color: #4caf50; border: 1px solid #4caf50; }
+#ws-badge.reconnecting { color: #ff9800; border: 1px solid #ff9800; }
+.panels { display: flex; flex: 1; overflow: hidden; }
+.panel { display: flex; flex-direction: column; border-right: 1px solid #333; overflow: hidden; }
+.panel:last-child { border-right: none; }
+#panel-conn { width: 220px; flex-shrink: 0; }
+#panel-log  { flex: 1; }
+#panel-compose { width: 260px; flex-shrink: 0; }
+.panel-header { background: #222; padding: 6px 10px; font-weight: bold; color: #aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; border-bottom: 1px solid #333; }
+.panel-body { flex: 1; overflow-y: auto; padding: 10px; }
+.section { margin-bottom: 14px; }
+.section-title { color: #7ec8e3; font-size: 11px; margin-bottom: 6px; border-bottom: 1px solid #333; padding-bottom: 3px; }
+label { display: block; color: #888; font-size: 11px; margin-bottom: 2px; }
+input, select { width: 100%; background: #2a2a2a; border: 1px solid #444; color: #e0e0e0; padding: 4px 6px; font-family: monospace; font-size: 12px; border-radius: 3px; margin-bottom: 6px; }
+button { background: #2a4a6a; color: #e0e0e0; border: 1px solid #3a6a9a; padding: 4px 10px; cursor: pointer; font-family: monospace; font-size: 12px; border-radius: 3px; margin-right: 4px; }
+button:hover { background: #3a6a9a; }
+button.danger { background: #5a2a2a; border-color: #8a3a3a; }
+button.danger:hover { background: #8a3a3a; }
+button.small { padding: 2px 7px; font-size: 11px; }
+.badge { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+.badge.green { background: #4caf50; }
+.badge.red { background: #f44336; }
+.badge.grey { background: #666; }
+.listener-item, .conn-item { display: flex; align-items: center; justify-content: space-between; padding: 3px 0; font-size: 12px; }
+/* Message log */
+.log-toolbar { padding: 6px 10px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; gap: 6px; flex-shrink: 0; }
+.msg-entry { border-bottom: 1px solid #2a2a2a; padding: 6px 4px; cursor: pointer; }
+.msg-entry:hover { background: #222; }
+.msg-header { display: flex; gap: 8px; align-items: baseline; }
+.msg-ts { color: #666; font-size: 11px; }
+.msg-dir { font-weight: bold; }
+.msg-dir.in { color: #4caf50; }
+.msg-dir.out { color: #2196f3; }
+.msg-type { color: #ff9800; }
+.msg-fields { color: #aaa; font-size: 11px; }
+.msg-detail { display: none; margin-top: 6px; padding: 6px; background: #222; border-radius: 3px; font-size: 11px; }
+.msg-detail.open { display: block; }
+.msg-raw { color: #666; word-break: break-all; margin-top: 4px; }
+.msg-decoded { color: #b0bec5; }
+/* Rules list */
+.rule-item { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #2a2a2a; font-size: 11px; }
+.rule-info { color: #aaa; }
+.rule-fired { color: #666; margin-left: 6px; }
+/* Responsive */
+@media (max-width: 900px) {
+  .panels { flex-direction: column; }
+  #panel-conn, #panel-compose { width: 100%; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>sctp-probe</h1>
+  <span id="ws-badge" class="reconnecting">RECONNECTING</span>
+</header>
+<div class="panels">
+
+<!-- PANEL 1: CONNECTIONS -->
+<div class="panel" id="panel-conn">
+  <div class="panel-header">Connections</div>
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="section-title">— Server —</div>
+      <label>Port</label>
+      <input id="srv-port" type="number" value="29168">
+      <label>PPID</label>
+      <input id="srv-ppid" type="number" value="24">
+      <div>
+        <button onclick="serverStart()">Start</button>
+        <button class="danger" onclick="serverStop()">Stop</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Listeners</div>
+      <div id="listeners-list"><span style="color:#555">none</span></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">— Client —</div>
+      <label>Host</label>
+      <input id="cli-host" value="127.0.0.1">
+      <label>Port</label>
+      <input id="cli-port" type="number" value="29168">
+      <label>PPID</label>
+      <input id="cli-ppid" type="number" value="24">
+      <button onclick="clientConnect()">Connect</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Connections</div>
+      <div id="connections-list"><span style="color:#555">none</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PANEL 2: MESSAGE LOG -->
+<div class="panel" id="panel-log">
+  <div class="panel-header">Message Log</div>
+  <div class="log-toolbar">
+    <button class="small danger" onclick="clearLog()">Clear</button>
+    <button class="small" onclick="exportJson()">Export JSON</button>
+    <button class="small" onclick="exportPcap()">Export PCAP</button>
+  </div>
+  <div class="panel-body" id="msg-log"></div>
+</div>
+
+<!-- PANEL 3: COMPOSE & RULES -->
+<div class="panel" id="panel-compose">
+  <div class="panel-header">Compose &amp; Rules</div>
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="section-title">— Send Raw —</div>
+      <label>Hex bytes</label>
+      <input id="send-hex" placeholder="00 20 00 05 ...">
+      <label>Connection ID (blank = server broadcast)</label>
+      <input id="send-conn" placeholder="conn-1">
+      <button onclick="sendRaw()">Send</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">— Auto-Reply Rule —</div>
+      <label>Match PDU type</label>
+      <select id="rule-pdu">
+        <option value="*">* (any)</option>
+        <option value="WRR_REQ">WRR_REQ</option>
+        <option value="SWR_REQ">SWR_REQ</option>
+        <option value="ERR_IND">ERR_IND</option>
+        <option value="WRWI">WRWI</option>
+        <option value="SWI">SWI</option>
+      </select>
+      <label>Match MI (blank = any)</label>
+      <input id="rule-mi" placeholder="0x1144">
+      <label>Match SN (blank = any)</label>
+      <input id="rule-sn" placeholder="0x0001">
+      <label>Match Peer (blank = any)</label>
+      <input id="rule-peer" placeholder="127.0.0.1:54321">
+      <label>Action</label>
+      <select id="rule-action" onchange="updateRuleForm()">
+        <option value="auto_reply">auto_reply</option>
+        <option value="drop">drop</option>
+        <option value="log_only">log_only</option>
+      </select>
+      <div id="rule-template-row">
+        <label>Reply template</label>
+        <select id="rule-template">
+          <option value="WRR_SUCCESS">WRR_SUCCESS</option>
+          <option value="WRR_PARTIAL">WRR_PARTIAL</option>
+          <option value="WRR_PERMANENT_FAILURE">WRR_PERMANENT_FAILURE</option>
+          <option value="WRR_TRANSIENT_FAILURE">WRR_TRANSIENT_FAILURE</option>
+          <option value="WRR_TIMEOUT">WRR_TIMEOUT</option>
+          <option value="SWR_SUCCESS">SWR_SUCCESS</option>
+          <option value="SWR_NOT_FOUND">SWR_NOT_FOUND</option>
+          <option value="ERR_IND_SEMANTIC">ERR_IND_SEMANTIC</option>
+          <option value="ERR_IND_TRANSFER_SYNTAX">ERR_IND_TRANSFER_SYNTAX</option>
+          <option value="WRWI_SCHEDULED">WRWI_SCHEDULED</option>
+          <option value="WRWI_CANCELLED">WRWI_CANCELLED</option>
+          <option value="SWI_CANCELLED">SWI_CANCELLED</option>
+        </select>
+      </div>
+      <label>Delay (ms)</label>
+      <input id="rule-delay" type="number" value="0">
+      <label>Count (0 = unlimited)</label>
+      <input id="rule-count" type="number" value="0">
+      <button onclick="addRule()">Add Rule</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Active Rules</div>
+      <div id="rules-list"><span style="color:#555">none</span></div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<script>
+const BASE = '';
+let ws = null;
+let lastMsgId = 0;
+
+// ------------------------------------------------------------------
+// WebSocket
+// ------------------------------------------------------------------
+function connectWs() {
+  const badge = document.getElementById('ws-badge');
+  badge.className = 'reconnecting';
+  badge.textContent = 'RECONNECTING';
+  ws = new WebSocket(`ws://${location.host}/ws/events`);
+  ws.onopen = () => {
+    badge.className = 'live';
+    badge.textContent = 'LIVE';
+    refreshAll();
+  };
+  ws.onmessage = (e) => {
+    const evt = JSON.parse(e.data);
+    if (evt.type === 'message') appendMessage(evt.data);
+    if (evt.type === 'connection') refreshConnections();
+    if (evt.type === 'rule_fired') refreshRules();
+  };
+  ws.onclose = () => {
+    badge.className = 'reconnecting';
+    badge.textContent = 'RECONNECTING';
+    setTimeout(connectWs, 2000);
+  };
+}
+
+// ------------------------------------------------------------------
+// API helpers
+// ------------------------------------------------------------------
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(BASE + path, opts);
+  return r.json().catch(() => ({}));
+}
+
+// ------------------------------------------------------------------
+// Server
+// ------------------------------------------------------------------
+async function serverStart() {
+  const port = +document.getElementById('srv-port').value;
+  const ppid = +document.getElementById('srv-ppid').value;
+  await api('POST', '/api/server/start', { port, ppid });
+  refreshConnections();
+}
+async function serverStop() {
+  const port = +document.getElementById('srv-port').value;
+  await api('POST', '/api/server/stop', { port });
+  refreshConnections();
+}
+
+// ------------------------------------------------------------------
+// Client
+// ------------------------------------------------------------------
+async function clientConnect() {
+  const host = document.getElementById('cli-host').value;
+  const port = +document.getElementById('cli-port').value;
+  const ppid = +document.getElementById('cli-ppid').value;
+  await api('POST', '/api/client/connect', { host, port, ppid });
+  refreshConnections();
+}
+async function clientDisconnect(id) {
+  await api('POST', '/api/client/disconnect', { id });
+  refreshConnections();
+}
+
+// ------------------------------------------------------------------
+// Connections status
+// ------------------------------------------------------------------
+async function refreshConnections() {
+  const [srvData, cliData] = await Promise.all([
+    api('GET', '/api/server/status'),
+    api('GET', '/api/client/status'),
+  ]);
+  const ll = document.getElementById('listeners-list');
+  ll.innerHTML = '';
+  (srvData.listeners || []).forEach(l => {
+    const d = document.createElement('div');
+    d.className = 'listener-item';
+    d.innerHTML = `<span><span class="badge green"></span>:${l.port} ppid=${l.ppid} (${(l.peers||[]).length} peer${(l.peers||[]).length===1?'':'s'})</span>
+      <button class="small danger" onclick="api('POST','/api/server/stop',{port:${l.port}}).then(refreshConnections)">×</button>`;
+    ll.appendChild(d);
+  });
+  if (!ll.children.length) ll.innerHTML = '<span style="color:#555">none</span>';
+
+  const cl = document.getElementById('connections-list');
+  cl.innerHTML = '';
+  (cliData.connections || []).forEach(c => {
+    const color = c.state === 'CONNECTED' ? 'green' : 'red';
+    const d = document.createElement('div');
+    d.className = 'conn-item';
+    d.innerHTML = `<span><span class="badge ${color}"></span>${c.id} ${c.host}:${c.port}</span>
+      <button class="small danger" onclick="clientDisconnect('${c.id}')">×</button>`;
+    cl.appendChild(d);
+  });
+  if (!cl.children.length) cl.innerHTML = '<span style="color:#555">none</span>';
+}
+
+// ------------------------------------------------------------------
+// Messages
+// ------------------------------------------------------------------
+function appendMessage(msg) {
+  if (msg.id > lastMsgId) lastMsgId = msg.id;
+  const log = document.getElementById('msg-log');
+  const dir = msg.direction === 'inbound';
+  const el = document.createElement('div');
+  el.className = 'msg-entry';
+  el.innerHTML = `
+    <div class="msg-header">
+      <span class="msg-ts">${msg.timestamp ? msg.timestamp.substring(11,19) : ''}</span>
+      <span class="msg-dir ${dir?'in':'out'}">${dir ? '←' : '→'}</span>
+      <span class="msg-type">${msg.pdu_type || msg.protocol || 'raw'}</span>
+      <span class="msg-fields">${msg.message_identifier ? 'MI:'+msg.message_identifier : ''} ${msg.serial_number ? 'SN:'+msg.serial_number : ''}</span>
+    </div>
+    <div class="msg-detail" id="detail-${msg.id}">
+      <div class="msg-decoded">${msg.decoded ? escHtml(JSON.stringify(msg.decoded, null, 2)) : ''}</div>
+      <div class="msg-raw">${msg.raw_hex || ''}</div>
+    </div>`;
+  el.querySelector('.msg-header').onclick = () => {
+    const d = document.getElementById('detail-'+msg.id);
+    d && d.classList.toggle('open');
+  };
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function clearLog() {
+  await api('DELETE', '/api/messages');
+  document.getElementById('msg-log').innerHTML = '';
+  lastMsgId = 0;
+}
+
+function exportJson() { window.location.href = '/api/export/json'; }
+function exportPcap() { window.location.href = '/api/export/pcap'; }
+
+// ------------------------------------------------------------------
+// Send
+// ------------------------------------------------------------------
+async function sendRaw() {
+  const hex = document.getElementById('send-hex').value.trim();
+  const conn = document.getElementById('send-conn').value.trim();
+  if (!hex) return;
+  const body = { hex };
+  if (conn) body.connection_id = conn;
+  await api('POST', '/api/send', body);
+}
+
+// ------------------------------------------------------------------
+// Rules
+// ------------------------------------------------------------------
+function updateRuleForm() {
+  const action = document.getElementById('rule-action').value;
+  document.getElementById('rule-template-row').style.display = action === 'auto_reply' ? '' : 'none';
+}
+
+async function addRule() {
+  const body = {
+    match_pdu_type: document.getElementById('rule-pdu').value,
+    match_message_identifier: document.getElementById('rule-mi').value || null,
+    match_serial_number: document.getElementById('rule-sn').value || null,
+    match_peer_addr: document.getElementById('rule-peer').value || null,
+    action: document.getElementById('rule-action').value,
+    reply_template: document.getElementById('rule-action').value === 'auto_reply'
+      ? document.getElementById('rule-template').value : null,
+    delay_ms: +document.getElementById('rule-delay').value,
+    count: +document.getElementById('rule-count').value,
+  };
+  await api('POST', '/api/rules', body);
+  refreshRules();
+}
+
+async function deleteRule(id) {
+  await api('DELETE', `/api/rules/${id}`);
+  refreshRules();
+}
+
+async function refreshRules() {
+  const data = await api('GET', '/api/rules');
+  const rl = document.getElementById('rules-list');
+  rl.innerHTML = '';
+  (data.rules || []).forEach(r => {
+    const d = document.createElement('div');
+    d.className = 'rule-item';
+    d.innerHTML = `<span class="rule-info">#${r.id} ${r.match_pdu_type} → ${r.reply_template||r.action}<span class="rule-fired">[${r.fired}/${r.count||'∞'}]</span></span>
+      <button class="small danger" onclick="deleteRule(${r.id})">×</button>`;
+    rl.appendChild(d);
+  });
+  if (!rl.children.length) rl.innerHTML = '<span style="color:#555">none</span>';
+}
+
+// ------------------------------------------------------------------
+// Init
+// ------------------------------------------------------------------
+async function refreshAll() {
+  refreshConnections();
+  refreshRules();
+  // Load existing messages
+  const data = await api('GET', `/api/messages?since_id=0&limit=200`);
+  (data.messages || []).forEach(appendMessage);
+}
+
+connectWs();
+</script>
+</body>
+</html>
