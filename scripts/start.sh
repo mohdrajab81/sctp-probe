@@ -20,7 +20,15 @@ source .venv/bin/activate
 WEB_PORT="${WEB_PORT:-8765}"
 DB_PATH="${DB_PATH:-sctp_probe.db}"
 LOG_LEVEL="${LOG_LEVEL:-INFO}"
+BIND_HOST="${BIND_HOST:-0.0.0.0}"
 
-echo "Starting sctp-probe on http://127.0.0.1:${WEB_PORT}  DB=${DB_PATH}"
+# Detect WSL and print the reachable Windows URL
+if grep -qi microsoft /proc/version 2>/dev/null; then
+  WSL_IP=$(hostname -I | awk '{print $1}')
+  echo "Starting sctp-probe — open in Windows browser: http://${WSL_IP}:${WEB_PORT}"
+else
+  echo "Starting sctp-probe on http://${BIND_HOST}:${WEB_PORT}  DB=${DB_PATH}"
+fi
+
 LOG_LEVEL="$LOG_LEVEL" DB_PATH="$DB_PATH" \
-  uvicorn sctp_probe.main:app --host 127.0.0.1 --port "$WEB_PORT"
+  uvicorn sctp_probe.main:app --host "$BIND_HOST" --port "$WEB_PORT"
