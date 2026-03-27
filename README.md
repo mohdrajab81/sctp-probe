@@ -214,6 +214,13 @@ curl -s http://127.0.0.1:8765/api/export/pcap -o capture.pcap
 This section describes using sctp-probe as a live MME simulator against a running
 SentinelCBC instance. It mirrors the steps in `IMPLEMENTATION_PLAN.md` Phase 11.
 
+Important environment rule:
+
+- Unit tests and non-SCTP checks may run on Windows.
+- Full simulator-backed SCTP integration must run fully inside WSL2/Linux.
+- For live end-to-end testing, SentinelCBC, `sctp-probe`, and PostgreSQL must all be
+  installed, configured, and running inside the same WSL2 environment before the test starts.
+
 ### Prerequisites
 
 - SentinelCBC repo at `/mnt/c/Projects/sentinel-cbc`
