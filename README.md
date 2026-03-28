@@ -243,6 +243,9 @@ Important environment rule:
   - `/mnt/c/Projects/sctp-probe/artifacts/run_live_multi_peer_9d.sh`
   - `/mnt/c/Projects/sctp-probe/artifacts/run_live_multi_instance_9e.sh`
   - `/mnt/c/Projects/sctp-probe/artifacts/run_live_timing_9c.sh`
+  - `/mnt/c/Projects/sctp-probe/artifacts/run_all_live_suites.sh`
+  - For 9C timing artifacts, keep the final capture set:
+    - `/mnt/c/Projects/sctp-probe/artifacts/live_timing_captures_20260328_053213/`
 
 ### Prerequisites
 
