@@ -17,6 +17,78 @@ declare -a SCRIPTS=(
   "$ROOT_PROBE/artifacts/run_live_timing_9c.sh"
 )
 
+usage() {
+  cat <<'EOF'
+Usage:
+  bash /mnt/c/Projects/sctp-probe/artifacts/run_all_live_suites.sh [options]
+
+Options:
+  --all             Run every suite. This is the default.
+  --single-peer     Run only the single-peer full suite.
+  --multi-peer      Run only the multi-peer 9D suite.
+  --multi-instance  Run only the multi-instance 9E suite.
+  --timing          Run only the timing 9C suite.
+  --list            Print the available suite labels and exit.
+  -h, --help        Show this help.
+EOF
+}
+
+print_suite_list() {
+  for label in "${LABELS[@]}"; do
+    echo "$label"
+  done
+}
+
+declare -a SELECTED_LABELS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --all)
+      SELECTED_LABELS=("${LABELS[@]}")
+      ;;
+    --single-peer)
+      SELECTED_LABELS+=("single_peer_full")
+      ;;
+    --multi-peer)
+      SELECTED_LABELS+=("multi_peer_9d")
+      ;;
+    --multi-instance)
+      SELECTED_LABELS+=("multi_instance_9e")
+      ;;
+    --timing)
+      SELECTED_LABELS+=("timing_9c")
+      ;;
+    --list)
+      print_suite_list
+      exit 0
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "ERROR: unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if [[ ${#SELECTED_LABELS[@]} -eq 0 ]]; then
+  SELECTED_LABELS=("${LABELS[@]}")
+fi
+
+label_enabled() {
+  local wanted="$1"
+  for label in "${SELECTED_LABELS[@]}"; do
+    if [[ "$label" == "$wanted" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 run_and_capture_out_dir() {
   local label="$1"
   local script_path="$2"
@@ -58,6 +130,9 @@ REPORT_FILE="$ROOT_PROBE/artifacts/live_suite_runs_${TIMESTAMP}.md"
 } > "$REPORT_FILE"
 
 for i in "${!LABELS[@]}"; do
+  if ! label_enabled "${LABELS[$i]}"; then
+    continue
+  fi
   result="$(run_and_capture_out_dir "${LABELS[$i]}" "${SCRIPTS[$i]}")"
   echo "$result" >> "$SUMMARY_FILE"
 
