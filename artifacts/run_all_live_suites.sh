@@ -35,10 +35,38 @@ run_and_capture_out_dir() {
   printf '%s|%s\n' "$label" "$out_dir"
 }
 
-SUMMARY_FILE="$ROOT_PROBE/artifacts/live_suite_runs_$(date +%Y%m%d_%H%M%S).txt"
+count_manifest_lines() {
+  local manifest_path="$1"
+  if [[ -f "$manifest_path" ]]; then
+    wc -l < "$manifest_path" | tr -d ' '
+  else
+    echo "0"
+  fi
+}
+
+TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+SUMMARY_FILE="$ROOT_PROBE/artifacts/live_suite_runs_${TIMESTAMP}.txt"
+REPORT_FILE="$ROOT_PROBE/artifacts/live_suite_runs_${TIMESTAMP}.md"
+
+{
+  echo "# Live Suite Run Summary"
+  echo
+  echo "Generated at: $(date -Iseconds)"
+  echo
+  echo "| Suite | Output Directory | Manifest | Entries |"
+  echo "| --- | --- | --- | ---: |"
+} > "$REPORT_FILE"
 
 for i in "${!LABELS[@]}"; do
-  run_and_capture_out_dir "${LABELS[$i]}" "${SCRIPTS[$i]}" >> "$SUMMARY_FILE"
+  result="$(run_and_capture_out_dir "${LABELS[$i]}" "${SCRIPTS[$i]}")"
+  echo "$result" >> "$SUMMARY_FILE"
+
+  label="${result%%|*}"
+  out_dir="${result#*|}"
+  manifest_path="${out_dir}/manifest.txt"
+  entry_count="$(count_manifest_lines "$manifest_path")"
+  printf '| %s | %s | %s | %s |\n' "$label" "$out_dir" "$manifest_path" "$entry_count" >> "$REPORT_FILE"
 done
 
 echo "SUMMARY_FILE=$SUMMARY_FILE"
+echo "REPORT_FILE=$REPORT_FILE"
