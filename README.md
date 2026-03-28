@@ -239,8 +239,10 @@ Important environment rule:
   installed, configured, and running inside the same WSL2 environment before the test starts.
 - When launching both services from a Windows-hosted shell, prefer the checked-in
   WSL bash runners instead of ad hoc PowerShell backgrounding:
-  - `/mnt/c/Projects/sctp-probe/artifacts/run_live_warning_family_matrix.sh`
   - `/mnt/c/Projects/sctp-probe/artifacts/run_all_live_simulator_captures.sh`
+  - `/mnt/c/Projects/sctp-probe/artifacts/run_live_multi_peer_9d.sh`
+  - `/mnt/c/Projects/sctp-probe/artifacts/run_live_multi_instance_9e.sh`
+  - `/mnt/c/Projects/sctp-probe/artifacts/run_live_timing_9c.sh`
 
 ### Prerequisites
 
