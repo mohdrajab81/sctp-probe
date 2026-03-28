@@ -250,18 +250,18 @@ Important environment rule:
 ### Prerequisites
 
 - SentinelCBC repo at `/mnt/c/Projects/sentinel-cbc`
-- Docker (for Postgres + Redis): `docker compose ... up -d postgres redis`
+- Docker (for Postgres): `docker compose ... up -d postgres`
 - Both services accessible at `127.0.0.1`
 
 ### Step 1 — Start infrastructure
 
 ```bash
 cd /mnt/c/Projects/sentinel-cbc
-docker compose -f deployments/docker/docker-compose.yaml up -d postgres redis
+docker compose -f deployments/docker/docker-compose.yaml up -d postgres
 docker compose -f deployments/docker/docker-compose.yaml ps
 ```
 
-Wait until both containers show `running` or `healthy`.
+Wait until the container shows `running` or `healthy`.
 
 ### Step 2 — Seed the peer into Postgres
 
@@ -309,7 +309,6 @@ curl -s -X POST http://127.0.0.1:8765/api/rules \
 ```bash
 cd /mnt/c/Projects/sentinel-cbc
 SENTINELCBC_DATABASE_DSN="postgres://sentinelcbc:sentinelcbc@127.0.0.1:5432/sentinel_cbc?sslmode=disable" \
-SENTINELCBC_REDIS_ADDRESS="127.0.0.1:6379" \
 SENTINELCBC_SCTP_ENABLED=true \
 SENTINELCBC_SCTP_PORT=29168 \
 ./sentinel-cbc

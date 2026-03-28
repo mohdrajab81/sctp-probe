@@ -587,19 +587,91 @@ chunk header so Wireshark auto-selects the SBc-AP dissector.
 
 ## 13. Testing Strategy
 
+Testing is split across two cooperating repos:
+
+- `sctp-probe` covers the simulator itself via pytest.
+- `sentinel-cbc` covers CBC application behavior via Go unit tests, internal
+  integration tests, and live external SCTP integration against `sctp-probe`.
+
+### 13.1 Current Inventory Snapshot (2026-03-28)
+
+| Repo | Category | Count | Notes |
+| --- | --- | ---: | --- |
+| `sctp-probe` | Unit/component pytest | 43 | Store, decoder, encoder, rule matching |
+| `sctp-probe` | In-process integration pytest | 29 | FastAPI endpoints, rule flow, Phase 11 regression |
+| `sctp-probe` | SCTP/Linux-only pytest | 3 | Real SCTP socket smoke tests |
+| `sctp-probe` | Live external-system pytest | 7 | Requires live `sctp-probe`, `sentinel-cbc`, and Postgres |
+| `sctp-probe` | Other test utility | 1 | `validate_fixtures.py` CLI, not a pytest module |
+| `sentinel-cbc` | Unit/component Go tests | 135 | API, service, delivery, protocol, store, config, metrics |
+| `sentinel-cbc` | Internal integration Go tests | 81 | Real app-stack and PostgreSQL-backed integration |
+| `sentinel-cbc` | Live external Go tests | 34 top-level / 49 concrete cases | Real `sentinel-cbc` to `sctp-probe` to Postgres verification |
+
+### 13.2 `sctp-probe` Test Groups
+
 ```text
 tests/
-  test_decoder.py       unit: decode each sentinel-cbc fixture .bin file
-  test_encoder.py       unit: encode each reply template, decode result
-  test_rules.py         unit: rule matching logic, count limiting, delay
-  test_store.py         unit: SQLite store operations (uses :memory:)
-  test_api.py           integration: FastAPI TestClient, no real SCTP
-  test_sctp_transport.py  SCTP smoke test, @pytest.mark.sctp, Linux only
-  validate_fixtures.py  CLI: cross-validate against sentinel-cbc fixture corpus
+  test_store.py              unit/component: SQLite store operations
+  test_decoder.py            unit/component: decode safety + fixture-backed decode checks
+  test_encoder.py            unit/component: reply template encode + round-trip decode
+  test_rules.py              mixed: unit matching tests + rule-evaluation integration tests
+  test_api.py                in-process integration: FastAPI app, mocked SCTP
+  test_phase11.py            in-process integration: Phase 11 regression coverage
+  test_sctp_transport.py     SCTP transport smoke tests, @pytest.mark.sctp, Linux/WSL2 only
+  test_integration_phase11.py live external integration, @pytest.mark.integration
+  validate_fixtures.py       CLI: cross-validate against sentinel-cbc fixture corpus
 ```
 
-SCTP-dependent tests are marked `@pytest.mark.sctp` and skipped automatically
-when pysctp is unavailable. All other tests run on Windows, macOS, and Linux.
+### 13.3 `sentinel-cbc` Test Groups Relevant to This Tool
+
+- Unit/component tests verify API handlers, services, delivery logic, codecs,
+  config, metrics, and stores.
+- Internal integration tests wire the CBC HTTP stack to a real PostgreSQL
+  backend and, for worker-oriented slices, to fake transport doubles.
+- Live external integration in `tests/integration/live_sctp_probe_test.go`
+  verifies the real CBC to simulator path over HTTP, Postgres, and SCTP.
+
+The live external CBC suite currently expands into 49 concrete cases grouped as:
+
+| Live Suite | Count | Coverage |
+| --- | ---: | --- |
+| Single-peer full live suite | 33 | Happy path, response matrix, warning families, delivery areas, validation, async correlation, duplicate handling, discard paths |
+| Multi-peer live suite | 3 | Fan-out and mixed per-peer outcomes |
+| Multi-instance live suite | 5 | No duplicate sends, cross-instance stop, restart behavior, failover, stale reservation reclaim |
+| Timing / retry / failure suite | 8 | Delayed responses, retries, terminal timeout, transport failure, stop equivalents |
+
+### 13.4 Environment Matrix
+
+| Test Category | Windows | WSL2/Linux | Notes |
+| --- | --- | --- | --- |
+| `sctp-probe` unit/component pytest | Yes | Yes | Some cases still depend on optional pycrate and fixture availability |
+| `sctp-probe` in-process integration pytest | Yes | Yes | No real SCTP required |
+| `sctp-probe` SCTP smoke tests | No | Yes | Requires Linux SCTP kernel support and `pysctp` |
+| `sctp-probe` live Phase 11 pytest | No practical support | Yes | Requires live `sctp-probe`, `sentinel-cbc`, and Postgres in the same WSL2 environment |
+| `sentinel-cbc` unit/component Go tests | Yes | Yes | Standard Go test execution |
+| `sentinel-cbc` internal integration Go tests | Yes | Yes | Uses Testcontainers by default or `SENTINEL_TEST_DSN` local fast-path |
+| `sentinel-cbc` live external Go tests | No practical support | Yes | Requires live SCTP path against `sctp-probe` |
+
+### 13.5 Skip Behavior and Optional Dependencies
+
+- `@pytest.mark.sctp` tests skip automatically when `pysctp` or Linux SCTP
+  kernel support is unavailable.
+- Encoder tests skip when the pycrate SBc-AP runtime is unavailable.
+- Decoder fixture-specific tests skip when the SentinelCBC fixture corpus is not
+  present at the configured path.
+- `@pytest.mark.integration` tests skip when live `sctp-probe`,
+  `sentinel-cbc`, or Postgres endpoints are not reachable.
+- The CBC live Go suite also self-skips when required probe, CBC, or Postgres
+  endpoints are unavailable.
+
+### 13.6 Documentation Boundaries
+
+- Keep exact day-to-day run commands in `README.md`.
+- Keep the detailed CBC live-suite case catalog in
+  `sentinel-cbc/tests/integration/README.md`.
+- Keep per-run evidence in `artifacts/*/manifest.txt`, exported JSON, and PCAP
+  captures.
+- Keep this design document at the taxonomy, architecture, and environment-rule
+  level so it remains authoritative without becoming a volatile test ledger.
 
 ---
 
