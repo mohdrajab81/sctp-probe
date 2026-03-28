@@ -508,6 +508,24 @@ outbound message save + ws broadcast after each successful `auto_reply` send.
 - sctp-probe: started with `nohup ... disown` to survive WSL2 session exits.
 - SentinelCBC binary: pre-built at `/mnt/c/Projects/sentinel-cbc/sentinel-cbc` (go build).
 - Windows Postgres (port 5432) is NOT accessible from WSL2 without admin firewall rule.
+- Final retained live artifact sets:
+  - `artifacts/live_simulator_captures_20260328_034408/`
+  - `artifacts/live_multi_peer_captures_20260328_040731/`
+  - `artifacts/live_multi_instance_captures_20260328_044653/`
+  - `artifacts/live_timing_captures_20260328_053213/`
+- Final retained WSL runners:
+  - `artifacts/run_all_live_simulator_captures.sh`
+  - `artifacts/run_live_multi_peer_9d.sh`
+  - `artifacts/run_live_multi_instance_9e.sh`
+  - `artifacts/run_live_timing_9c.sh`
+  - `artifacts/run_all_live_suites.sh`
+- Top-level runner suite-selection flags:
+  - `--single-peer`
+  - `--multi-peer`
+  - `--multi-instance`
+  - `--timing`
+  - `--all`
+  - `--list`
 
 ---
 
@@ -533,8 +551,7 @@ Run date: 2026-03-27
 
 ## Next Step
 
-Phase 11 is complete. The next work track is expanded live SentinelCBC
-interoperability coverage from the simulator side.
+Phase 11 is complete. The next work track is broader Phase 10 interop expansion.
 
 Planned follow-up coverage areas:
 
