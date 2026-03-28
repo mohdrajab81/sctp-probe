@@ -52,6 +52,11 @@ def test_wrr_timeout_returns_none():
     assert result is None
 
 
+def test_swr_timeout_returns_none():
+    result = enc.encode("SWR_TIMEOUT", _INBOUND)
+    assert result is None
+
+
 def test_unknown_template_returns_none():
     result = enc.encode("DOES_NOT_EXIST", _INBOUND)
     assert result is None

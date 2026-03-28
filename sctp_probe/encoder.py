@@ -132,11 +132,11 @@ def encode(
     inbound: DecodedMessage | None = None,
     **kwargs: Any,
 ) -> bytes | None:
-    """Encode a reply PDU from a named template. Returns None on failure or for WRR_TIMEOUT."""
+    """Encode a reply PDU from a named template. Returns None on failure or for timeout templates."""
     try:
         mi, sn = _mi_sn(inbound, kwargs)
 
-        if template_name == "WRR_TIMEOUT":
+        if template_name in {"WRR_TIMEOUT", "SWR_TIMEOUT"}:
             return None
         if template_name == "WRR_SUCCESS":
             return _wrr_response(mi, sn, cause=0)
