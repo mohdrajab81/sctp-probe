@@ -533,4 +533,27 @@ Run date: 2026-03-27
 
 ## Next Step
 
-Phase 11: SentinelCBC integration + end-to-end verification.
+Phase 11 is complete. The next work track is expanded live SentinelCBC
+interoperability coverage from the simulator side.
+
+Planned follow-up coverage areas:
+
+- richer delivery areas:
+  - multiple TACs
+  - multiple cell / ECGI entries
+  - larger Warning-Area-List payloads
+- multiple concurrent or overlapping warnings
+- stop one of multiple active warnings
+- validation / rejection / malformed-payload scenarios
+- selected timeout and transport-disturbance scenarios where the simulator can
+  force them reliably
+- multi-peer and multi-instance SentinelCBC verification support as the live
+  harness expands
+
+Execution note:
+
+- unit tests and non-SCTP checks may still run on Windows
+- full simulator-backed SCTP interoperability testing must continue to run fully
+  inside WSL2/Linux
+- prefer the checked-in WSL runner scripts under `artifacts/` over mixed
+  PowerShell/WSL backgrounding when launching live end-to-end flows
