@@ -102,6 +102,7 @@ run_case "42_delayed_wrr_response_no_retry" 'TestLiveSctpProbeDelayedWriteReplac
 run_case "43_wrr_timeout_then_retry_success" 'TestLiveSctpProbeWriteReplaceTimeoutThenRetrySuccess$'
 run_case "44_wrr_timeout_exhausted_terminal" 'TestLiveSctpProbeWriteReplaceTimeoutExhaustedBecomesTerminal$'
 run_case "45_wrr_disconnect_then_retry_success" 'TestLiveSctpProbeWriteReplaceDisconnectThenRetrySuccess$'
+run_case "46_wrr_transport_failure_exhausted_terminal" 'TestLiveSctpProbeWriteReplaceTransportFailureExhaustedBecomesTerminal$'
 
 echo "OUT_DIR=$OUT_DIR"
 echo "MANIFEST=$OUT_DIR/manifest.txt"
