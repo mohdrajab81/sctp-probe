@@ -38,7 +38,7 @@ class SctpServer:
     # Public API
     # ------------------------------------------------------------------
 
-    async def start(self, port: int, ppid: int) -> None:
+    async def start(self, port: int, ppid: int, bind_host: str = "127.0.0.1") -> None:
         if not SCTP_AVAILABLE:
             raise SCTPUnavailableError(
                 "pysctp is not available. Install libsctp-dev and run 'modprobe sctp'."
@@ -46,12 +46,18 @@ class SctpServer:
         if port in self._listeners:
             raise ValueError(f"Already listening on port {port}")
 
-        sock = await asyncio.to_thread(self._create_listener, port, ppid)
+        sock = await asyncio.to_thread(self._create_listener, port, ppid, bind_host)
         task = asyncio.get_event_loop().create_task(
             self._accept_loop(port), name=f"sctp-accept-{port}"
         )
-        self._listeners[port] = {"socket": sock, "ppid": ppid, "task": task, "peers": {}}
-        log.info("SCTP server listening on port %d (ppid=%d)", port, ppid)
+        self._listeners[port] = {
+            "socket": sock,
+            "ppid": ppid,
+            "bind_host": bind_host,
+            "task": task,
+            "peers": {},
+        }
+        log.info("SCTP server listening on %s:%d (ppid=%d)", bind_host, port, ppid)
 
     async def stop(self, port: int) -> None:
         entry = self._listeners.pop(port, None)
@@ -79,6 +85,7 @@ class SctpServer:
             result.append({
                 "port": port,
                 "ppid": entry["ppid"],
+                "bind_host": entry["bind_host"],
                 "peers": list(entry["peers"].keys()),
             })
         return result
@@ -96,11 +103,11 @@ class SctpServer:
     # Internal (run in thread or as tasks)
     # ------------------------------------------------------------------
 
-    def _create_listener(self, port: int, ppid: int) -> Any:
+    def _create_listener(self, port: int, ppid: int, bind_host: str) -> Any:
         sock = _sctp_mod.sctpsocket_tcp(socket.AF_INET)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.settimeout(_SOCKET_TIMEOUT)
-        sock.bind(("127.0.0.1", port))
+        sock.bind((bind_host, port))
         sock.listen(16)
         return sock
 

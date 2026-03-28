@@ -142,6 +142,23 @@ curl -s -X POST http://127.0.0.1:8765/api/server/start \
 
 `ppid` is the SCTP Payload Protocol Identifier. SBc-AP uses PPID 24.
 
+Optional multi-peer live-testing field:
+
+- `host` or `bind_host` chooses the local SCTP bind address. Default is `127.0.0.1`.
+- This is used by the SentinelCBC multi-peer live suite to run more than one simulator instance on the same SCTP port with different loopback IPs such as `127.0.0.1` and `127.0.0.2`.
+
+Example:
+
+```bash
+curl -s -X POST http://127.0.0.1:8766/api/server/start \
+  -H "Content-Type: application/json" \
+  -d '{"port": 29168, "ppid": 24, "host": "127.0.0.2"}'
+```
+
+For multi-peer live testing, run each probe API instance with its own `DB_PATH`.
+Using one shared SQLite file for both instances causes rule and message state to
+bleed across simulators.
+
 ### Add an auto-reply rule
 
 ```bash
@@ -414,7 +431,7 @@ sctp-probe/
 
 Full API specification is in [DESIGN.md](DESIGN.md) section 8.
 
-- `POST /api/server/start` — Start SCTP listener `{port, ppid}`
+- `POST /api/server/start` — Start SCTP listener `{port, ppid, host?}`
 - `POST /api/server/stop` — Stop listener `{port?}`
 - `GET  /api/server/status` — List active listeners and connected peers
 - `POST /api/client/connect` — Connect to remote SCTP peer `{host, port, ppid}`

@@ -63,10 +63,19 @@ async def test_server_status(client):
 
 async def test_server_start(client, mock_sctp):
     srv, _ = mock_sctp
-    r = await client.post("/api/server/start", json={"port": 29200, "ppid": 24})
+    r = await client.post("/api/server/start", json={"port": 29200, "ppid": 24, "bind_host": "127.0.0.2"})
     assert r.status_code == 200
     assert r.json()["status"] == "listening"
-    srv.start.assert_called_once_with(29200, 24)
+    assert r.json()["bind_host"] == "127.0.0.2"
+    srv.start.assert_called_once_with(29200, 24, bind_host="127.0.0.2")
+
+
+async def test_server_start_accepts_host_alias(client, mock_sctp):
+    srv, _ = mock_sctp
+    r = await client.post("/api/server/start", json={"port": 29201, "ppid": 24, "host": "127.0.0.3"})
+    assert r.status_code == 200
+    assert r.json()["bind_host"] == "127.0.0.3"
+    srv.start.assert_called_once_with(29201, 24, bind_host="127.0.0.3")
 
 
 async def test_server_stop(client, mock_sctp):

@@ -114,6 +114,11 @@ if os.path.isdir(_STATIC_DIR):
 class ServerStartBody(BaseModel):
     port: int
     ppid: int = 24
+    bind_host: str = Field(default="127.0.0.1", alias="host")
+
+    model_config = {
+        "populate_by_name": True,
+    }
 
 
 class ServerStopBody(BaseModel):
@@ -155,12 +160,12 @@ class SendBody(BaseModel):
 @app.post("/api/server/start")
 async def server_start(body: ServerStartBody):
     try:
-        await _sctp_server.start(body.port, body.ppid)
+        await _sctp_server.start(body.port, body.ppid, bind_host=body.bind_host)
     except ValueError as e:
         raise HTTPException(409, detail=str(e))
     except SCTPUnavailableError as e:
         raise HTTPException(503, detail=str(e))
-    return {"port": body.port, "status": "listening"}
+    return {"port": body.port, "bind_host": body.bind_host, "status": "listening"}
 
 
 @app.post("/api/server/stop")
