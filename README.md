@@ -220,6 +220,10 @@ Important environment rule:
 - Full simulator-backed SCTP integration must run fully inside WSL2/Linux.
 - For live end-to-end testing, SentinelCBC, `sctp-probe`, and PostgreSQL must all be
   installed, configured, and running inside the same WSL2 environment before the test starts.
+- When launching both services from a Windows-hosted shell, prefer the checked-in
+  WSL bash runners instead of ad hoc PowerShell backgrounding:
+  - `/mnt/c/Projects/sctp-probe/artifacts/run_live_warning_family_matrix.sh`
+  - `/mnt/c/Projects/sctp-probe/artifacts/run_all_live_simulator_captures.sh`
 
 ### Prerequisites
 
