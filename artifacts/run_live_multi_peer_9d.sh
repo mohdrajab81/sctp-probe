@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_SENTINEL="/mnt/c/Projects/sentinel-cbc"
 ROOT_PROBE="/mnt/c/Projects/sctp-probe"
+SENTINEL_BIN="${SENTINELCBC_LIVE_BIN:-/tmp/sentinel-cbc-live}"
 PROBE_A_URL="http://127.0.0.1:8875"
 PROBE_B_URL="http://127.0.0.1:8876"
 PROBE_A_DB="/tmp/sctp-probe-8875.db"
@@ -65,6 +66,7 @@ run_case() {
   SENTINELCBC_LIVE_MULTI_PEER_IDS="sctp-probe-mme-a,sctp-probe-mme-b" \
   SENTINELCBC_LIVE_URL="http://127.0.0.1:8080" \
   SENTINELCBC_LIVE_DSN="$SENTINEL_DSN" \
+  SENTINELCBC_LIVE_BIN="$SENTINEL_BIN" \
   /usr/local/go/bin/go test ./tests/integration -run "$pattern" -count=1 -v
 
   export_probe_artifacts "$stem" "probe_a" "$PROBE_A_URL"
@@ -81,12 +83,42 @@ stop_listener() {
 cleanup() {
   stop_listener "$PROBE_A_URL"
   stop_listener "$PROBE_B_URL"
-  pkill -f "uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8875" >/dev/null 2>&1 || true
-  pkill -f "uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8876" >/dev/null 2>&1 || true
+  kill_matching "uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8875"
+  kill_matching "uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8876"
+  kill_matching "$SENTINEL_BIN"
+  kill_matching "/mnt/c/Projects/sentinel-cbc/sentinel-cbc"
 }
 trap cleanup EXIT
 
+kill_matching() {
+  local pattern="$1"
+  local pid
+  for pid in $(pgrep -f -- "$pattern" 2>/dev/null || true); do
+    if [[ "$pid" != "$$" ]]; then
+      kill "$pid" >/dev/null 2>&1 || true
+    fi
+  done
+}
+
+build_sentinel_binary() {
+  if ! command -v /usr/local/go/bin/go >/dev/null 2>&1; then
+    echo "ERROR: /usr/local/go/bin/go not found" >&2
+    exit 1
+  fi
+  (cd "$ROOT_SENTINEL" && /usr/local/go/bin/go build -o "$SENTINEL_BIN" ./cmd/sentinel-cbc)
+}
+
+clear_listener_ports() {
+  local port
+  for port in "$@"; do
+    fuser -k "${port}/tcp" >/dev/null 2>&1 || true
+    fuser -k "${port}/sctp" >/dev/null 2>&1 || true
+  done
+}
+
 cleanup
+build_sentinel_binary
+clear_listener_ports 8875 8876 8080 29168
 
 cd "$ROOT_PROBE"
 nohup env DB_PATH="$PROBE_A_DB" "$ROOT_PROBE/.venv/bin/python" -m uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8875 >/tmp/sctp-probe-8875.log 2>&1 &
@@ -122,7 +154,8 @@ export SENTINELCBC_DATABASE_DSN="$SENTINEL_DSN"
 export SENTINELCBC_REDIS_ADDRESS="127.0.0.1:6379"
 export SENTINELCBC_SCTP_ENABLED=true
 export SENTINELCBC_SCTP_PORT=29168
-nohup "$ROOT_SENTINEL/sentinel-cbc" >/tmp/sentinel-cbc-9d.log 2>&1 &
+export SENTINELCBC_LIVE_BIN="$SENTINEL_BIN"
+nohup "$SENTINEL_BIN" >/tmp/sentinel-cbc-9d.log 2>&1 &
 
 wait_http "http://127.0.0.1:8080/health" "sentinel-cbc" "/tmp/sentinel-cbc-9d.log"
 wait_connected "$PROBE_A_URL" "sctp-probe A"

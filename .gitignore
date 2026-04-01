@@ -19,6 +19,7 @@ lib64/
 
 # Virtual environments
 .venv/
+.venv-wsl/
 venv/
 env/
 ENV/
@@ -46,6 +47,7 @@ Thumbs.db
 
 # PCAP exports (runtime artifacts)
 *.pcap
+artifacts/live_*_captures_*/
 
 # Environment files (never commit secrets)
 .env

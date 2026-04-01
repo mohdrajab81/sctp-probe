@@ -3,15 +3,43 @@ set -euo pipefail
 
 ROOT_SENTINEL="/mnt/c/Projects/sentinel-cbc"
 ROOT_PROBE="/mnt/c/Projects/sctp-probe"
+SENTINEL_BIN="${SENTINELCBC_LIVE_BIN:-/tmp/sentinel-cbc-live}"
 OUT_DIR="$ROOT_PROBE/artifacts/live_simulator_captures_$(date +%Y%m%d_%H%M%S)"
 
 mkdir -p "$OUT_DIR"
 
 cleanup() {
-  pkill -f "uvicorn sctp_probe.main:app" >/dev/null 2>&1 || true
-  pkill -f "/mnt/c/Projects/sentinel-cbc/sentinel-cbc|sentinel-cbc" >/dev/null 2>&1 || true
+  kill_matching "uvicorn sctp_probe.main:app"
+  kill_matching "$SENTINEL_BIN"
+  kill_matching "/mnt/c/Projects/sentinel-cbc/sentinel-cbc"
 }
 trap cleanup EXIT
+
+kill_matching() {
+  local pattern="$1"
+  local pid
+  for pid in $(pgrep -f -- "$pattern" 2>/dev/null || true); do
+    if [[ "$pid" != "$$" ]]; then
+      kill "$pid" >/dev/null 2>&1 || true
+    fi
+  done
+}
+
+build_sentinel_binary() {
+  if ! command -v /usr/local/go/bin/go >/dev/null 2>&1; then
+    echo "ERROR: /usr/local/go/bin/go not found" >&2
+    exit 1
+  fi
+  (cd "$ROOT_SENTINEL" && /usr/local/go/bin/go build -o "$SENTINEL_BIN" ./cmd/sentinel-cbc)
+}
+
+clear_listener_ports() {
+  local port
+  for port in "$@"; do
+    fuser -k "${port}/tcp" >/dev/null 2>&1 || true
+    fuser -k "${port}/sctp" >/dev/null 2>&1 || true
+  done
+}
 
 wait_http() {
   local url="$1"
@@ -32,6 +60,8 @@ wait_http() {
 }
 
 cleanup
+build_sentinel_binary
+clear_listener_ports 8765 8080 29168
 
 psql "postgres://sentinelcbc:sentinelcbc@127.0.0.1:5432/sentinel_cbc?sslmode=disable" <<'SQL'
 INSERT INTO peers (
@@ -56,7 +86,8 @@ export SENTINELCBC_DATABASE_DSN="postgres://sentinelcbc:sentinelcbc@127.0.0.1:54
 export SENTINELCBC_REDIS_ADDRESS="127.0.0.1:6379"
 export SENTINELCBC_SCTP_ENABLED=true
 export SENTINELCBC_SCTP_PORT=29168
-"$ROOT_SENTINEL/sentinel-cbc" >/tmp/sentinel-cbc-live-suite.log 2>&1 &
+export SENTINELCBC_LIVE_BIN="$SENTINEL_BIN"
+"$SENTINEL_BIN" >/tmp/sentinel-cbc-live-suite.log 2>&1 &
 
 wait_http "http://127.0.0.1:8765/api/server/status" "sctp-probe" "/tmp/sctp-probe-live-suite.log"
 wait_http "http://127.0.0.1:8080/health" "sentinel-cbc" "/tmp/sentinel-cbc-live-suite.log"
@@ -72,6 +103,7 @@ run_case() {
   SCTP_PROBE_URL=http://127.0.0.1:8765 \
   SENTINELCBC_LIVE_URL=http://127.0.0.1:8080 \
   SENTINELCBC_LIVE_DSN="postgres://sentinelcbc:sentinelcbc@127.0.0.1:5432/sentinel_cbc?sslmode=disable" \
+  SENTINELCBC_LIVE_BIN="$SENTINEL_BIN" \
   /usr/local/go/bin/go test ./tests/integration -run "$pattern" -count=1 -v
 
   curl -fsS http://127.0.0.1:8765/api/export/pcap -o "${stem}.pcap"
@@ -100,8 +132,8 @@ run_case "15_family_etws_with_message_body" 'TestLiveSctpProbeWarningFamilyMatri
 run_case "16_family_eu_alert" 'TestLiveSctpProbeWarningFamilyMatrix/EU_ALERT$'
 run_case "17_family_operator_defined" 'TestLiveSctpProbeWarningFamilyMatrix/OPERATOR_DEFINED$'
 run_case "18_delivery_area_tai_list_multiple" 'TestLiveSctpProbeDeliveryAreaMatrix/TAI_LIST_MULTIPLE$'
-run_case "19_delivery_area_cell_list_single" 'TestLiveSctpProbeDeliveryAreaMatrix/CELL_ID_LIST_SINGLE$'
-run_case "20_delivery_area_cell_list_multiple" 'TestLiveSctpProbeDeliveryAreaMatrix/CELL_ID_LIST_MULTIPLE$'
+run_case "19_delivery_area_cell_list_single" 'TestLiveSctpProbeDeliveryAreaMatrix/EUTRAN_CELL_LIST_SINGLE$'
+run_case "20_delivery_area_cell_list_multiple" 'TestLiveSctpProbeDeliveryAreaMatrix/EUTRAN_CELL_LIST_MULTIPLE$'
 run_case "21_multiple_warnings_sequential_same_peer" 'TestLiveSctpProbeMultipleWarningsMatrix/SEQUENTIAL_SAME_PEER_TWO_WARNINGS$'
 run_case "22_create_validation_whole_network_with_delivery_area" 'TestLiveSctpProbeCreateValidationMatrix/whole_network_with_delivery_area$'
 run_case "23_create_validation_specific_area_without_delivery_area" 'TestLiveSctpProbeCreateValidationMatrix/specific_area_without_delivery_area$'

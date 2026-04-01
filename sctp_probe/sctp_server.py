@@ -29,7 +29,13 @@ _SOCKET_TIMEOUT = 5.0
 
 class SctpServer:
     def __init__(self) -> None:
-        # port → {"socket": sock, "ppid": int, "task": asyncio.Task, "peers": {addr: conn}}
+        # port → {
+        #   "socket": sock,
+        #   "ppid": int,
+        #   "task": asyncio.Task,
+        #   "peers": {addr: conn},
+        #   "peer_tasks": {addr: asyncio.Task},
+        # }
         self._listeners: dict[int, dict[str, Any]] = {}
         self.on_message: Callable[[bytes, str, int], Any] | None = None
         self.on_event: Callable[[str, str, int], Any] | None = None
@@ -56,6 +62,7 @@ class SctpServer:
             "bind_host": bind_host,
             "task": task,
             "peers": {},
+            "peer_tasks": {},
         }
         log.info("SCTP server listening on %s:%d (ppid=%d)", bind_host, port, ppid)
 
@@ -70,9 +77,18 @@ class SctpServer:
         peers = list(entry.get("peers", {}).values())
         if peers:
             await asyncio.gather(*(asyncio.to_thread(self._close_socket, c) for c in peers))
-        # Wait for the thread pool threads (accept, sctp_recv) to finish exiting
-        # after their blocking calls return with an error from the closed socket.
-        await asyncio.sleep(0.15)
+        peer_tasks = list(entry.get("peer_tasks", {}).values())
+        for task in peer_tasks:
+            task.cancel()
+        tasks = [entry["task"], *peer_tasks]
+        if tasks:
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*tasks, return_exceptions=True),
+                    timeout=_SOCKET_TIMEOUT + 1.0,
+                )
+            except asyncio.TimeoutError:
+                log.warning("Timed out waiting for SCTP server tasks to stop on port %d", port)
         log.info("SCTP server stopped on port %d", port)
 
     async def stop_all(self) -> None:
@@ -113,10 +129,19 @@ class SctpServer:
 
     @staticmethod
     def _close_socket(sock: Any) -> None:
-        try:
-            sock.close()
-        except Exception:
-            pass
+        sockets = [sock]
+        raw_sock = getattr(sock, "_sk", None)
+        if raw_sock is not None and raw_sock is not sock:
+            sockets.append(raw_sock)
+        for candidate in sockets:
+            try:
+                candidate.shutdown(socket.SHUT_RDWR)
+            except Exception:
+                pass
+            try:
+                candidate.close()
+            except Exception:
+                pass
 
     async def _accept_loop(self, port: int) -> None:
         entry = self._listeners.get(port)
@@ -126,9 +151,9 @@ class SctpServer:
         while True:
             try:
                 conn, peer = await asyncio.to_thread(sock.accept)
-                # Listening socket has a timeout (non-blocking mode for accept);
-                # accepted connections must be blocking for sctp_recv to work.
-                conn.setblocking(True)
+                conn.settimeout(_SOCKET_TIMEOUT)
+                if hasattr(conn, "_sk"):
+                    conn._sk.settimeout(_SOCKET_TIMEOUT)
                 peer_addr = f"{peer[0]}:{peer[1]}"
                 entry["peers"][peer_addr] = conn
                 log.info("SCTP assoc up: %s on port %d", peer_addr, port)
@@ -136,10 +161,11 @@ class SctpServer:
                     asyncio.get_event_loop().create_task(
                         self._call_cb(self.on_event, "assoc_up", peer_addr, port)
                     )
-                asyncio.get_event_loop().create_task(
+                task = asyncio.get_event_loop().create_task(
                     self._handle_conn(conn, peer_addr, port),
                     name=f"sctp-conn-{peer_addr}",
                 )
+                entry["peer_tasks"][peer_addr] = task
             except asyncio.CancelledError:
                 break
             except Exception as exc:
@@ -171,6 +197,7 @@ class SctpServer:
         finally:
             entry = self._listeners.get(port, {})
             entry.get("peers", {}).pop(peer_addr, None)
+            entry.get("peer_tasks", {}).pop(peer_addr, None)
             await asyncio.to_thread(self._close_socket, conn)
             log.info("SCTP assoc down: %s on port %d", peer_addr, port)
             if self.on_event:

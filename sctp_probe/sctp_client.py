@@ -5,6 +5,7 @@ Must NOT import from sctp_server.py.
 from __future__ import annotations
 
 import asyncio
+import errno
 import itertools
 import logging
 import socket
@@ -73,6 +74,13 @@ class SctpClient:
         entry["read_task"].cancel()
         entry["hb_task"].cancel()
         await asyncio.to_thread(self._close_socket, entry["socket"])
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(entry["read_task"], entry["hb_task"], return_exceptions=True),
+                timeout=_SOCKET_TIMEOUT + 1.0,
+            )
+        except asyncio.TimeoutError:
+            log.warning("Timed out waiting for SCTP client tasks to stop for %s", conn_id)
         log.info("SCTP client disconnected %s", conn_id)
 
     async def disconnect_all(self) -> None:
@@ -106,15 +114,24 @@ class SctpClient:
         sock = _sctp_mod.sctpsocket_tcp(socket.AF_INET)
         sock.settimeout(_SOCKET_TIMEOUT)  # timeout applies to connect()
         sock.connect((host, port))
-        sock.setblocking(True)  # sctp_recv must block; EAGAIN otherwise
+        sock.settimeout(_SOCKET_TIMEOUT)
         return sock
 
     @staticmethod
     def _close_socket(sock: Any) -> None:
-        try:
-            sock.close()
-        except Exception:
-            pass
+        sockets = [sock]
+        raw_sock = getattr(sock, "_sk", None)
+        if raw_sock is not None and raw_sock is not sock:
+            sockets.append(raw_sock)
+        for candidate in sockets:
+            try:
+                candidate.shutdown(socket.SHUT_RDWR)
+            except Exception:
+                pass
+            try:
+                candidate.close()
+            except Exception:
+                pass
 
     async def _read_loop(self, conn_id: str) -> None:
         while True:
@@ -127,6 +144,15 @@ class SctpClient:
                 break
             except socket.timeout:
                 continue
+            except BlockingIOError:
+                continue
+            except OSError as exc:
+                if exc.errno in (errno.EAGAIN, errno.EWOULDBLOCK):
+                    continue
+                log.debug("sctp_recv client %s: %s", conn_id, exc)
+                if conn_id in self._conns:
+                    self._conns[conn_id]["state"] = "ERROR"
+                break
             except Exception as exc:
                 log.debug("sctp_recv client %s: %s", conn_id, exc)
                 if conn_id in self._conns:
