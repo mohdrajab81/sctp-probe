@@ -2,7 +2,7 @@
 
 What this test does (mirrors the Phase 11 task list exactly):
 
-  Step 1  — Verify docker infra (postgres + redis) is running; start if containers exist
+  Step 1  — Verify docker infra (postgres) is running; start if containers exist
              but are stopped.  Skip if docker is unavailable.
   Step 2  — Seed the sctp-probe-mme peer row into Postgres (upsert, safe to re-run).
   Step 3  — sctp-probe must already be running (http://127.0.0.1:8765).
@@ -102,17 +102,17 @@ def _probe_get(path: str, **params) -> dict:
 # ---------------------------------------------------------------------------
 
 def _ensure_docker_infra():
-    """Ensure postgres and redis containers are running.
+    """Ensure postgres container is running.
 
     If docker is not available, skip rather than fail — the user may be
-    running the DBs natively.
+    running the DB natively.
     """
     check = _run(["docker", "info"])
     if check.returncode != 0:
         # docker not available — assume user has infra running natively
         return
 
-    up = _run(DOCKER_COMPOSE + ["up", "-d", "postgres", "redis"])
+    up = _run(DOCKER_COMPOSE + ["up", "-d", "postgres"])
     assert up.returncode == 0, (
         f"docker compose up failed:\n{up.stdout}\n{up.stderr}"
     )
