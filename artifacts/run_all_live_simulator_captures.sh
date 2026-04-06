@@ -6,6 +6,14 @@ ROOT_PROBE="/mnt/c/Projects/sctp-probe"
 SENTINEL_BIN="${SENTINELCBC_LIVE_BIN:-/tmp/sentinel-cbc-live}"
 OUT_DIR="$ROOT_PROBE/artifacts/live_simulator_captures_$(date +%Y%m%d_%H%M%S)"
 
+# Prefer .venv-wsl (has sctp) over .venv when running in WSL
+if [[ -x "$ROOT_PROBE/.venv-wsl/bin/python" ]] && \
+   "$ROOT_PROBE/.venv-wsl/bin/python" -c 'import sctp' 2>/dev/null; then
+  PROBE_PYTHON="$ROOT_PROBE/.venv-wsl/bin/python"
+else
+  PROBE_PYTHON="$ROOT_PROBE/.venv/bin/python"
+fi
+
 mkdir -p "$OUT_DIR"
 
 cleanup() {
@@ -80,7 +88,7 @@ SET primary_address = EXCLUDED.primary_address,
 SQL
 
 cd "$ROOT_PROBE"
-"$ROOT_PROBE/.venv/bin/python" -m uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8765 >/tmp/sctp-probe-live-suite.log 2>&1 &
+"$PROBE_PYTHON" -m uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8765 >/tmp/sctp-probe-live-suite.log 2>&1 &
 
 export SENTINELCBC_DATABASE_DSN="postgres://sentinelcbc:sentinelcbc@127.0.0.1:5432/sentinel_cbc?sslmode=disable"
 export SENTINELCBC_REDIS_ADDRESS="127.0.0.1:6379"

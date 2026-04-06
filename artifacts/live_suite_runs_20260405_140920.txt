@@ -1,0 +1,262 @@
+=== RUN single_peer_full ===
+INSERT 0 1
+=== CASE 01_write_replace_happy_path ===
+=== RUN   TestLiveSctpProbeWriteReplaceHappyPath
+--- PASS: TestLiveSctpProbeWriteReplaceHappyPath (9.13s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	9.139s
+=== CASE 02_stop_warning_happy_path ===
+=== RUN   TestLiveSctpProbeStopWarningHappyPath
+--- PASS: TestLiveSctpProbeStopWarningHappyPath (3.62s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	3.630s
+=== CASE 03_write_replace_indication_happy_path ===
+=== RUN   TestLiveSctpProbeWriteReplaceIndicationHappyPath
+--- PASS: TestLiveSctpProbeWriteReplaceIndicationHappyPath (1.39s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.398s
+=== CASE 04_stop_warning_indication_happy_path ===
+=== RUN   TestLiveSctpProbeStopWarningIndicationHappyPath
+--- PASS: TestLiveSctpProbeStopWarningIndicationHappyPath (3.62s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	3.626s
+=== CASE 05_error_indication_happy_path ===
+=== RUN   TestLiveSctpProbeErrorIndicationHappyPath
+--- PASS: TestLiveSctpProbeErrorIndicationHappyPath (1.44s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.442s
+=== CASE 06_dispatch_wrr_success ===
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix/WRR_SUCCESS
+--- PASS: TestLiveSctpProbeDispatchResponseMatrix (1.85s)
+    --- PASS: TestLiveSctpProbeDispatchResponseMatrix/WRR_SUCCESS (1.85s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.854s
+=== CASE 07_dispatch_wrr_partial ===
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix/WRR_PARTIAL
+--- PASS: TestLiveSctpProbeDispatchResponseMatrix (1.40s)
+    --- PASS: TestLiveSctpProbeDispatchResponseMatrix/WRR_PARTIAL (1.40s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.404s
+=== CASE 08_dispatch_wrr_permanent_failure ===
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix/WRR_PERMANENT_FAILURE
+--- PASS: TestLiveSctpProbeDispatchResponseMatrix (1.84s)
+    --- PASS: TestLiveSctpProbeDispatchResponseMatrix/WRR_PERMANENT_FAILURE (1.84s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.853s
+=== CASE 09_dispatch_wrr_transient_failure ===
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix/WRR_TRANSIENT_FAILURE
+--- PASS: TestLiveSctpProbeDispatchResponseMatrix (1.37s)
+    --- PASS: TestLiveSctpProbeDispatchResponseMatrix/WRR_TRANSIENT_FAILURE (1.37s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.375s
+=== CASE 10_dispatch_swr_success ===
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix/SWR_SUCCESS
+--- PASS: TestLiveSctpProbeDispatchResponseMatrix (3.56s)
+    --- PASS: TestLiveSctpProbeDispatchResponseMatrix/SWR_SUCCESS (3.56s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	3.571s
+=== CASE 11_dispatch_swr_not_found ===
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix
+=== RUN   TestLiveSctpProbeDispatchResponseMatrix/SWR_NOT_FOUND
+--- PASS: TestLiveSctpProbeDispatchResponseMatrix (3.44s)
+    --- PASS: TestLiveSctpProbeDispatchResponseMatrix/SWR_NOT_FOUND (3.44s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	3.446s
+=== CASE 12_family_cmas_presidential ===
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix/CMAS_PRESIDENTIAL
+--- PASS: TestLiveSctpProbeWarningFamilyMatrix (1.85s)
+    --- PASS: TestLiveSctpProbeWarningFamilyMatrix/CMAS_PRESIDENTIAL (1.85s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.860s
+=== CASE 13_family_cmas_public_safety ===
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix/CMAS_PUBLIC_SAFETY
+--- PASS: TestLiveSctpProbeWarningFamilyMatrix (1.86s)
+    --- PASS: TestLiveSctpProbeWarningFamilyMatrix/CMAS_PUBLIC_SAFETY (1.86s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.864s
+=== CASE 14_family_etws_primary_only ===
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix/ETWS_PRIMARY_ONLY
+--- PASS: TestLiveSctpProbeWarningFamilyMatrix (1.33s)
+    --- PASS: TestLiveSctpProbeWarningFamilyMatrix/ETWS_PRIMARY_ONLY (1.33s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.339s
+=== CASE 15_family_etws_with_message_body ===
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix/ETWS_WITH_MESSAGE_BODY
+--- PASS: TestLiveSctpProbeWarningFamilyMatrix (1.89s)
+    --- PASS: TestLiveSctpProbeWarningFamilyMatrix/ETWS_WITH_MESSAGE_BODY (1.89s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.900s
+=== CASE 16_family_eu_alert ===
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix/EU_ALERT
+--- PASS: TestLiveSctpProbeWarningFamilyMatrix (1.31s)
+    --- PASS: TestLiveSctpProbeWarningFamilyMatrix/EU_ALERT (1.31s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.319s
+=== CASE 17_family_operator_defined ===
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix
+=== RUN   TestLiveSctpProbeWarningFamilyMatrix/OPERATOR_DEFINED
+--- PASS: TestLiveSctpProbeWarningFamilyMatrix (1.89s)
+    --- PASS: TestLiveSctpProbeWarningFamilyMatrix/OPERATOR_DEFINED (1.89s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.894s
+=== CASE 18_delivery_area_tai_list_multiple ===
+=== RUN   TestLiveSctpProbeDeliveryAreaMatrix
+=== RUN   TestLiveSctpProbeDeliveryAreaMatrix/EUTRAN_TAI_LIST_MULTIPLE
+--- PASS: TestLiveSctpProbeDeliveryAreaMatrix (1.33s)
+    --- PASS: TestLiveSctpProbeDeliveryAreaMatrix/EUTRAN_TAI_LIST_MULTIPLE (1.33s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.333s
+=== CASE 19_delivery_area_cell_list_single ===
+=== RUN   TestLiveSctpProbeDeliveryAreaMatrix
+=== RUN   TestLiveSctpProbeDeliveryAreaMatrix/EUTRAN_CELL_LIST_SINGLE
+--- PASS: TestLiveSctpProbeDeliveryAreaMatrix (1.83s)
+    --- PASS: TestLiveSctpProbeDeliveryAreaMatrix/EUTRAN_CELL_LIST_SINGLE (1.83s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.835s
+=== CASE 20_delivery_area_cell_list_multiple ===
+=== RUN   TestLiveSctpProbeDeliveryAreaMatrix
+=== RUN   TestLiveSctpProbeDeliveryAreaMatrix/EUTRAN_CELL_LIST_MULTIPLE
+--- PASS: TestLiveSctpProbeDeliveryAreaMatrix (1.35s)
+    --- PASS: TestLiveSctpProbeDeliveryAreaMatrix/EUTRAN_CELL_LIST_MULTIPLE (1.35s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.357s
+=== CASE 21_multiple_warnings_sequential_same_peer ===
+=== RUN   TestLiveSctpProbeMultipleWarningsMatrix
+=== RUN   TestLiveSctpProbeMultipleWarningsMatrix/SEQUENTIAL_SAME_PEER_TWO_WARNINGS
+--- PASS: TestLiveSctpProbeMultipleWarningsMatrix (1.82s)
+    --- PASS: TestLiveSctpProbeMultipleWarningsMatrix/SEQUENTIAL_SAME_PEER_TWO_WARNINGS (1.82s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.827s
+=== CASE 22_create_validation_whole_network_with_delivery_area ===
+=== RUN   TestLiveSctpProbeCreateValidationMatrix
+=== RUN   TestLiveSctpProbeCreateValidationMatrix/whole_network_with_delivery_area
+--- PASS: TestLiveSctpProbeCreateValidationMatrix (0.29s)
+    --- PASS: TestLiveSctpProbeCreateValidationMatrix/whole_network_with_delivery_area (0.28s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	0.295s
+=== CASE 23_create_validation_specific_area_without_delivery_area ===
+=== RUN   TestLiveSctpProbeCreateValidationMatrix
+=== RUN   TestLiveSctpProbeCreateValidationMatrix/specific_area_without_delivery_area
+--- PASS: TestLiveSctpProbeCreateValidationMatrix (0.24s)
+    --- PASS: TestLiveSctpProbeCreateValidationMatrix/specific_area_without_delivery_area (0.23s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	0.249s
+=== CASE 24_create_validation_too_many_tais ===
+=== RUN   TestLiveSctpProbeCreateValidationMatrix
+=== RUN   TestLiveSctpProbeCreateValidationMatrix/too_many_tais
+--- PASS: TestLiveSctpProbeCreateValidationMatrix (0.25s)
+    --- PASS: TestLiveSctpProbeCreateValidationMatrix/too_many_tais (0.24s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	0.257s
+=== CASE 25_stop_validation_invalid_delivery_area_type ===
+=== RUN   TestLiveSctpProbeStopValidationMatrix
+=== RUN   TestLiveSctpProbeStopValidationMatrix/invalid_stop_delivery_area_type
+--- PASS: TestLiveSctpProbeStopValidationMatrix (1.36s)
+    --- PASS: TestLiveSctpProbeStopValidationMatrix/invalid_stop_delivery_area_type (1.35s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.371s
+=== CASE 26_stop_validation_already_stopped_conflict ===
+=== RUN   TestLiveSctpProbeStopValidationMatrix
+=== RUN   TestLiveSctpProbeStopValidationMatrix/already_stopped_conflict
+--- PASS: TestLiveSctpProbeStopValidationMatrix (4.03s)
+    --- PASS: TestLiveSctpProbeStopValidationMatrix/already_stopped_conflict (4.02s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	4.035s
+=== CASE 27_wrwi_after_stop_uncorrelated ===
+=== RUN   TestLiveSctpProbeWriteReplaceIndicationAfterStopIsUncorrelated
+--- PASS: TestLiveSctpProbeWriteReplaceIndicationAfterStopIsUncorrelated (3.61s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	3.614s
+=== CASE 28_error_indication_ambiguous_uncorrelated ===
+=== RUN   TestLiveSctpProbeErrorIndicationAmbiguousUncorrelated
+--- PASS: TestLiveSctpProbeErrorIndicationAmbiguousUncorrelated (1.80s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.810s
+=== CASE 29_duplicate_wrwi_logs_twice ===
+=== RUN   TestLiveSctpProbeDuplicateWriteReplaceIndicationLogsTwice
+--- PASS: TestLiveSctpProbeDuplicateWriteReplaceIndicationLogsTwice (1.88s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.881s
+=== CASE 30_swi_before_stop_uncorrelated ===
+=== RUN   TestLiveSctpProbeStopWarningIndicationBeforeStopIsUncorrelated
+--- PASS: TestLiveSctpProbeStopWarningIndicationBeforeStopIsUncorrelated (0.86s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	0.870s
+=== CASE 31_duplicate_swi_logs_twice ===
+=== RUN   TestLiveSctpProbeDuplicateStopWarningIndicationLogsTwice
+--- PASS: TestLiveSctpProbeDuplicateStopWarningIndicationLogsTwice (4.14s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	4.147s
+=== CASE 32_malformed_inbound_pdu_discarded ===
+=== RUN   TestLiveSctpProbeMalformedInboundPDUIsDiscarded
+--- PASS: TestLiveSctpProbeMalformedInboundPDUIsDiscarded (2.37s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	2.376s
+=== CASE 33_unsupported_inbound_initiating_message_discarded ===
+=== RUN   TestLiveSctpProbeUnsupportedInboundInitiatingMessageIsDiscarded
+--- PASS: TestLiveSctpProbeUnsupportedInboundInitiatingMessageIsDiscarded (3.97s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	3.982s
+OUT_DIR=/mnt/c/Projects/sctp-probe/artifacts/live_simulator_captures_20260405_140920
+MANIFEST=/mnt/c/Projects/sctp-probe/artifacts/live_simulator_captures_20260405_140920/manifest.txt
+single_peer_full|/mnt/c/Projects/sctp-probe/artifacts/live_simulator_captures_20260405_140920
+=== RUN multi_peer_9d ===
+INSERT 0 2
+=== CASE 34_multi_peer_wrr_both_success ===
+=== RUN   TestLiveSctpProbeMultiPeerWriteReplaceBothSuccess
+--- PASS: TestLiveSctpProbeMultiPeerWriteReplaceBothSuccess (1.23s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.236s
+=== CASE 35_multi_peer_wrr_mixed_outcomes ===
+=== RUN   TestLiveSctpProbeMultiPeerWriteReplaceMixedOutcomes
+--- PASS: TestLiveSctpProbeMultiPeerWriteReplaceMixedOutcomes (1.22s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.223s
+=== CASE 36_multi_peer_whole_network_enabled_peers ===
+=== RUN   TestLiveSctpProbeMultiPeerWholeNetworkResolvesEnabledPeers
+--- PASS: TestLiveSctpProbeMultiPeerWholeNetworkResolvesEnabledPeers (1.71s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	1.714s
+OUT_DIR=/mnt/c/Projects/sctp-probe/artifacts/live_multi_peer_captures_20260405_141054
+MANIFEST=/mnt/c/Projects/sctp-probe/artifacts/live_multi_peer_captures_20260405_141054/manifest.txt
+multi_peer_9d|/mnt/c/Projects/sctp-probe/artifacts/live_multi_peer_captures_20260405_141054
+=== RUN multi_instance_9e ===
+INSERT 0 1
+=== CASE 37_multi_instance_single_peer_no_duplicate_send ===
+=== RUN   TestLiveSctpProbeMultiInstanceSinglePeerNoDuplicateSend
+--- PASS: TestLiveSctpProbeMultiInstanceSinglePeerNoDuplicateSend (3.17s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	3.179s
+=== CASE 38_multi_instance_cross_instance_stop_no_duplicate_send ===
+=== RUN   TestLiveSctpProbeMultiInstanceCrossInstanceStopNoDuplicateSend
+--- PASS: TestLiveSctpProbeMultiInstanceCrossInstanceStopNoDuplicateSend (5.23s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	5.235s
+=== CASE 39_multi_instance_restart_no_duplicate_replay ===
+=== RUN   TestLiveSctpProbeMultiInstanceRestartNoDuplicateReplay
+--- PASS: TestLiveSctpProbeMultiInstanceRestartNoDuplicateReplay (5.91s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	5.914s
+=== CASE 40_multi_instance_primary_dies_secondary_continues ===
+=== RUN   TestLiveSctpProbeMultiInstancePrimaryDiesSecondaryContinues
+--- PASS: TestLiveSctpProbeMultiInstancePrimaryDiesSecondaryContinues (5.29s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	5.298s
+=== CASE 41_multi_instance_stale_reserved_reclaimed_by_secondary ===
+=== RUN   TestLiveSctpProbeMultiInstanceStaleReservedReclaimedBySecondary
+--- PASS: TestLiveSctpProbeMultiInstanceStaleReservedReclaimedBySecondary (7.75s)
+PASS
+ok  	github.com/sentinel-cbc/sentinel-cbc/tests/integration	7.763s
+OUT_DIR=/mnt/c/Projects/sctp-probe/artifacts/live_multi_instance_captures_20260405_141103
+MANIFEST=/mnt/c/Projects/sctp-probe/artifacts/live_multi_instance_captures_20260405_141103/manifest.txt
+multi_instance_9e|/mnt/c/Projects/sctp-probe/artifacts/live_multi_instance_captures_20260405_141103

@@ -4,6 +4,15 @@ set -euo pipefail
 ROOT_SENTINEL="/mnt/c/Projects/sentinel-cbc"
 ROOT_PROBE="/mnt/c/Projects/sctp-probe"
 SENTINEL_BIN="${SENTINELCBC_LIVE_BIN:-/tmp/sentinel-cbc-live}"
+
+# Prefer .venv-wsl (has sctp) over .venv when running in WSL
+if [[ -x "$ROOT_PROBE/.venv-wsl/bin/python" ]] && \
+   "$ROOT_PROBE/.venv-wsl/bin/python" -c 'import sctp' 2>/dev/null; then
+  PROBE_PYTHON="$ROOT_PROBE/.venv-wsl/bin/python"
+else
+  PROBE_PYTHON="$ROOT_PROBE/.venv/bin/python"
+fi
+
 PROBE_URL="http://127.0.0.1:8875"
 PROBE_DB="/tmp/sctp-probe-8875-9e.db"
 SENTINEL_DSN="postgres://sentinelcbc:sentinelcbc@127.0.0.1:5432/sentinel_cbc?sslmode=disable"
@@ -148,7 +157,7 @@ build_sentinel_binary
 clear_listener_ports 8875 8080 8081 29168
 
 cd "$ROOT_PROBE"
-nohup env DB_PATH="$PROBE_DB" "$ROOT_PROBE/.venv/bin/python" -m uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8875 >/tmp/sctp-probe-8875-9e.log 2>&1 &
+nohup env DB_PATH="$PROBE_DB" "$PROBE_PYTHON" -m uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8875 >/tmp/sctp-probe-8875-9e.log 2>&1 &
 wait_http "$PROBE_URL/api/server/status" "sctp-probe" "/tmp/sctp-probe-8875-9e.log"
 ensure_probe_listener
 

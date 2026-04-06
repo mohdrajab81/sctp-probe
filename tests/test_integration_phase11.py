@@ -59,7 +59,7 @@ WARNING_PAYLOAD = {
     "messageText": "Phase 11 integration test",
     "targetScope": "SPECIFIC_AREA",
     "deliveryArea": {
-        "type": "TAI_LIST",
+        "type": "EUTRAN_TAI_LIST",
         "taiList": [{"plmn": "41601", "tacHex": "0001"}],
     },
     "broadcastBehavior": "BROADCAST_ONCE",
@@ -102,17 +102,23 @@ def _probe_get(path: str, **params) -> dict:
 # ---------------------------------------------------------------------------
 
 def _ensure_docker_infra():
-    """Ensure postgres container is running.
+    """Ensure postgres is reachable.
 
-    If docker is not available, skip rather than fail — the user may be
-    running the DB natively.
+    If PostgreSQL is already reachable natively (e.g. WSL native install),
+    skip docker-compose entirely.  Fall back to docker-compose only when
+    postgres is not yet reachable and Docker is available.
     """
+    pg_ready = _run(["pg_isready", "-h", "127.0.0.1", "-p", "5432", "-q"])
+    if pg_ready.returncode == 0:
+        # Postgres is already up natively — nothing to do
+        return
+
     check = _run(["docker", "info"])
     if check.returncode != 0:
         # docker not available — assume user has infra running natively
         return
 
-    up = _run(DOCKER_COMPOSE + ["up", "-d", "postgres"])
+    up = _run(DOCKER_COMPOSE + ["up", "-d", "postgres"], timeout=60)
     assert up.returncode == 0, (
         f"docker compose up failed:\n{up.stdout}\n{up.stderr}"
     )

@@ -4,6 +4,15 @@ set -euo pipefail
 ROOT_SENTINEL="/mnt/c/Projects/sentinel-cbc"
 ROOT_PROBE="/mnt/c/Projects/sctp-probe"
 SENTINEL_BIN="${SENTINELCBC_LIVE_BIN:-/tmp/sentinel-cbc-live}"
+
+# Prefer .venv-wsl (has sctp) over .venv when running in WSL
+if [[ -x "$ROOT_PROBE/.venv-wsl/bin/python" ]] && \
+   "$ROOT_PROBE/.venv-wsl/bin/python" -c 'import sctp' 2>/dev/null; then
+  PROBE_PYTHON="$ROOT_PROBE/.venv-wsl/bin/python"
+else
+  PROBE_PYTHON="$ROOT_PROBE/.venv/bin/python"
+fi
+
 PROBE_A_URL="http://127.0.0.1:8875"
 PROBE_B_URL="http://127.0.0.1:8876"
 PROBE_A_DB="/tmp/sctp-probe-8875.db"
@@ -121,8 +130,8 @@ build_sentinel_binary
 clear_listener_ports 8875 8876 8080 29168
 
 cd "$ROOT_PROBE"
-nohup env DB_PATH="$PROBE_A_DB" "$ROOT_PROBE/.venv/bin/python" -m uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8875 >/tmp/sctp-probe-8875.log 2>&1 &
-nohup env DB_PATH="$PROBE_B_DB" "$ROOT_PROBE/.venv/bin/python" -m uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8876 >/tmp/sctp-probe-8876.log 2>&1 &
+nohup env DB_PATH="$PROBE_A_DB" "$PROBE_PYTHON" -m uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8875 >/tmp/sctp-probe-8875.log 2>&1 &
+nohup env DB_PATH="$PROBE_B_DB" "$PROBE_PYTHON" -m uvicorn sctp_probe.main:app --host 127.0.0.1 --port 8876 >/tmp/sctp-probe-8876.log 2>&1 &
 
 wait_http "$PROBE_A_URL/api/server/status" "sctp-probe A" "/tmp/sctp-probe-8875.log"
 wait_http "$PROBE_B_URL/api/server/status" "sctp-probe B" "/tmp/sctp-probe-8876.log"
