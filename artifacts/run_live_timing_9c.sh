@@ -101,6 +101,10 @@ run_case() {
   local label="$1"
   local pattern="$2"
 
+  # Some cases (46, 49) kill the SCTP listener as part of the test.
+  # Restore it before each case so the next one starts clean.
+  ensure_probe_listener
+
   echo "=== CASE $label ==="
   SCTP_PROBE_URL="$PROBE_URL" \
   SENTINELCBC_LIVE_URL="http://127.0.0.1:8080" \
@@ -135,7 +139,7 @@ SET primary_address = EXCLUDED.primary_address,
 SQL
 
 cd "$ROOT_SENTINEL"
-nohup env SENTINELCBC_HTTP_ADDR=':8080' SENTINELCBC_DATABASE_DSN="$SENTINEL_DSN" SENTINELCBC_REDIS_ADDRESS='127.0.0.1:6379' SENTINELCBC_SCTP_ENABLED=true SENTINELCBC_SCTP_PORT=29168 "$SENTINEL_BIN" >/tmp/sentinel-cbc-9c.log 2>&1 </dev/null &
+nohup env SENTINELCBC_HTTP_ADDR=':8080' SENTINELCBC_DATABASE_DSN="$SENTINEL_DSN" SENTINELCBC_SCTP_ENABLED=true SENTINELCBC_SCTP_PORT=29168 "$SENTINEL_BIN" >/tmp/sentinel-cbc-9c.log 2>&1 </dev/null &
 wait_http "http://127.0.0.1:8080/health" "sentinel-cbc" "/tmp/sentinel-cbc-9c.log"
 
 run_case "42_delayed_wrr_response_no_retry" 'TestLiveSctpProbeDelayedWriteReplaceResponseSucceedsWithoutRetry$'

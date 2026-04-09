@@ -359,19 +359,24 @@ visible. Look for `Write-Replace-Warning-Request` with the correct
 
 ### Overview
 
-The test suite spans both repos (sctp-probe + SentinelCBC) and totals **670 tests**
+The test suite spans both repos (sctp-probe + SentinelCBC) and totals **684 verified
+passing tests**
 across 6 suites. The single entry point that runs everything is `run_all_tests.sh`
 at the sctp-probe repo root.
 
 ```text
-670 tests total
+684 passing tests total
 ├── Suite 1  sentinel-cbc unit (12 packages)          347 tests   Windows / WSL / Linux / macOS
 ├── Suite 2  sentinel-cbc store/postgres (Docker)      15 tests   WSL only (Docker Engine)
-├── Suite 3  sentinel-cbc internal/integration        102 tests   WSL only (PostgreSQL)
+├── Suite 3  sentinel-cbc internal/integration        143 tests   WSL only (PostgreSQL)
 ├── Suite 4  sentinel-cbc live SCTP (cases 01–49)      70 tests   WSL only (SCTP + PostgreSQL)
 ├── Suite 5  sctp-probe unit (pytest)                 102 tests   Windows / WSL (1 skip on Windows)
 └── Suite 6  sctp-probe phase11 integration             7 tests   WSL only (SCTP + PostgreSQL)
 ```
+
+The overview above uses the master runner's passing-test counts. Suite 5 still
+collects 103 pytest items on WSL, but one SCTP transport case skips there, so
+the cross-repo headline uses 102 passing tests for that suite.
 
 ---
 
@@ -381,8 +386,8 @@ at the sctp-probe repo root.
 # From WSL, sctp-probe repo root
 cd /mnt/c/Projects/sctp-probe
 
-bash run_all_tests.sh                 # full run — all 670 tests (~20 min)
-bash run_all_tests.sh --no-live       # skip live SCTP suites — ~578 tests (~2 min)
+bash run_all_tests.sh                 # full run — all 684 passing tests (~20 min)
+bash run_all_tests.sh --no-live       # skip live SCTP suites — ~607 passing tests (~2 min)
 bash run_all_tests.sh --sentinel      # sentinel-cbc suites only (1 + 2 + 3 + 4)
 bash run_all_tests.sh --probe         # sctp-probe suites only (5 + 6)
 bash run_all_tests.sh -h              # show help
@@ -435,7 +440,7 @@ go test -count=1 \
 make test
 ```
 
-**Package breakdown:**
+**Package breakdown (top-level test functions; the runner also counts subtests):**
 
 | Package | Tests |
 | --- | ---: |
@@ -447,7 +452,11 @@ make test
 | `internal/service` | 50 |
 | `internal/store/memory` | 5 |
 | `internal/transport` (cbsp, sctp) | 22 |
-| **Total** | **347** |
+| **Top-level functions** | **262** |
+
+The master runner counts subtests individually from verbose `go test` output,
+which is why Suite 1 reports 347 passing tests even though the package table
+above lists 262 top-level functions.
 
 **Useful flags:**
 
@@ -483,7 +492,7 @@ bash scripts/test_all.sh
 
 **Nature:** Integration tests using a fake SCTP transport with a real PostgreSQL
 database. Tests the full service layer end-to-end without live SCTP sockets.
-**Count:** 102 tests.
+**Count:** 143 tests.
 **Platform:** WSL only. Requires PostgreSQL running at `127.0.0.1:5432`.
 
 ```bash
@@ -553,7 +562,7 @@ bash /mnt/c/Projects/sctp-probe/artifacts/run_live_timing_9c.sh
 **Nature:** Unit and component tests for the sctp-probe Python application.
 Covers API endpoints, SBc-AP decoder, encoder, rule engine, SQLite store,
 WebSocket hub, and SCTP transport. No live services needed.
-**Count:** 103 collected — **102 pass + 1 skip** on WSL. On Windows, the 3
+**Count:** 102 passing tests in the master runner; 103 collected — **102 pass + 1 skip** on WSL. On Windows, the 3
 SCTP transport tests skip (no Linux kernel), all others pass.
 **Platform:** Windows or WSL. WSL recommended for full coverage.
 
@@ -645,8 +654,8 @@ bash scripts/run_tests.sh --with-live # wait for live services then run suite 6
 | --- | --- | --- | ---: |
 | Editing sctp-probe Python code | `python -m pytest tests/ --ignore=tests/test_integration_phase11.py -v` | Windows or WSL | ~102 |
 | Editing sentinel-cbc Go code | `go test -count=1 ./internal/...` | Windows or WSL | ~347 |
-| Before committing | `bash run_all_tests.sh --no-live` | WSL | ~578 |
-| Before a release / after significant changes | `bash run_all_tests.sh` | WSL | 670 |
+| Before committing | `bash run_all_tests.sh --no-live` | WSL | ~607 |
+| Before a release / after significant changes | `bash run_all_tests.sh` | WSL | 684 |
 
 ---
 
@@ -687,7 +696,7 @@ sctp-probe/
 ├── scripts/
 │   ├── start.sh            # Start sctp-probe in foreground (respects env vars)
 │   └── run_tests.sh        # sctp-probe-only test runner (unit + optional phase11)
-├── run_all_tests.sh        # Master runner — all 670 tests across both repos
+├── run_all_tests.sh        # Master runner — 684 verified passing tests across both repos
 ├── DESIGN.md               # Full technical design (authoritative)
 ├── IMPLEMENTATION_PLAN.md  # Phased build plan and status
 ├── requirements.txt        # Python dependencies
