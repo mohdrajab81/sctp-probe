@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sI \"https://www.etsi.org/deliver/etsi_ts/129100_129199/129168/18.00.00_60/ts_129168v180000p.pdf\" -A \"Mozilla/5.0\" -w \"%{http_code}\")"
+    ]
+  }
+}
